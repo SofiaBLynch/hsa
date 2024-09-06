@@ -1,23 +1,25 @@
-button
-{
-	background-color:#f2f6f8;
-	min-width: 10em;
-    min-height: 2em;
-    border-radius: 5px;
-    font-size: 1.2em;
-    font-family: 'Montserrat', sans-serif;
-}
-button:hover
-{
-	background-color:#cf6d6d;
-	border: 1px solid #bc0e0e;
-    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
-
+/* Logout.css */
+.logout-container {
+    position: relative; /* Ensures relative positioning for the button's absolute positioning */
+    height: 100vh;      /* Full height to make sure the button is properly positioned */
 }
 
-button:active
-{
-	background-color:#bc0e0e;
-    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.5), 0 6px 20px 0 rgba(0,0,0,0.19);
+.logout-button {
+    position: absolute;
+    right: 20px; /* Position the button 20px from the right edge of the container */
+    top: 20px;   /* Position the button 20px from the top edge of the container */
+    /* Keep existing font and color styles */
+    font-family: 'Montserrat', sans-serif; /* Replace with your existing font if different */
+    font-size: 16px; /* Replace with your existing font size if different */
+    color: #333; /* Replace with your existing text color if different */
+    background-color: #d5e4d9; /* Replace with your existing background color if different */
+    border: 2px solid #669372; /* Replace with your existing border if different */
+    border-radius: 5px; /* Replace with your existing border-radius if different */
+    padding: 10px 20px; /* Adjust padding if needed */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s ease; /* Smooth transition for background color */
+}
 
+.logout-button:hover {
+    background-color: #ddd; /* Adjust hover color if needed */
 }

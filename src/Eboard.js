@@ -60,7 +60,7 @@ function Eboard({ eboard }) {
   }
 
   return (
-    <div>
+    <div className="formDash">
       <br /><Logout />
       {isEboard(eboard) && <CreateCode />}
       <br />
@@ -84,6 +84,7 @@ function Eboard({ eboard }) {
       {isEboard(eboard) && <ExcuseAbscense/>}
       {isEboard(eboard) && <ApprovedCabinet />}
     </div>
+
   );
 }
 

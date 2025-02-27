@@ -2,13 +2,27 @@ import { useState } from 'react';
 import './ExcuseAbscense.css';
 import { db } from './firebase';
 import { arrayRemove, arrayUnion, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs} from 'firebase/firestore';
 
 function ExcuseAbscense() {
     const[user, setUser] = useState();
     const[userSnap, setUserSnap] = useState();
+    var done = false; 
+    const[codeCollectin, setCodeCollection] = useState([]);
+    const[codesDocSnap, setCodesDocSnap] = useState([]);
     async function updateUsers(event)
     {
+        
         event.preventDefault();
+        if(!done)
+        {
+            const codesCollectionRef = collection(db, "codes");
+            const codesDocSnap = await getDocs(codesCollectionRef);
+            setCodeCollection(codesCollectionRef);
+            setCodesDocSnap(codesDocSnap);
+            console.log(codesDocSnap);
+            done = true;
+        }
         document.getElementById("abscenseEmailError").innerText = "";
         
         let email = document.getElementById("searchName").value;
@@ -21,6 +35,7 @@ function ExcuseAbscense() {
         const userRef = doc(db, "users", email);
         const user = await getDoc(userRef);
 
+
         setUser(userRef);
         setUserSnap(user);
         if(user.exists())
@@ -30,7 +45,25 @@ function ExcuseAbscense() {
             let data = user.data();
             document.getElementById("userFullName").innerText = "Name: " + data.firstName + " " + data.lastName;
             document.getElementById("userEmail").innerText = "Email: " + user.id;
+            let excusedEvents = data.excusedEvents;            ;
+            let attendedEvent = data.eventCodes;
             let unexcusedEvents = data.unexcusedEvents; 
+            
+            if (!codesDocSnap.empty) {
+                codesDocSnap.forEach((code) => {
+                    var codeData = code.data();
+
+                    if (codeData.cabinetRequired) {
+                        if(!excusedEvents.includes(code.id) && !attendedEvent.includes(code.id) && !unexcusedEvents.includes(code.id))
+                        unexcusedEvents.push(code.id);
+                    }
+                });
+            } else {
+                console.log("No codes found.");
+            }
+
+            updateDoc(userRef, { unexcusedEvents: arrayUnion(...unexcusedEvents) })
+
             let options = "<option value='select'>Select</option>";
             for (const e of unexcusedEvents) {
                 let codeRef = doc(db, "codes", e);
@@ -98,7 +131,7 @@ function ExcuseAbscense() {
                 excusedEvents:arrayUnion(unexcusedAbsense),
                 excusedReason: addedExcuse, 
                 unexcusedEvents:arrayRemove(unexcusedAbsense)
-
+                
             })
             //Reset everything
             document.getElementById("userUnexcusedAbsense").value = "select";

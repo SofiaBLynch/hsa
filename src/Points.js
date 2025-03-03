@@ -3,7 +3,7 @@ import './Points.css';
 import React, { useEffect, useState } from "react";
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs} from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
 function Points() {
@@ -22,11 +22,31 @@ function Points() {
 				var email = user.email;
 				var userDocRef = doc(db, "users", email);
 				var userDocSnap = await getDoc(userDocRef);
+
+				//Fetch event code data
+				const codesCollectionRef = collection(db, "codes");
+				const codesDocSnap = await getDocs(codesCollectionRef);
+	
 				if(userDocSnap.exists())
 				{
 					const data = userDocSnap.data();
-					const fallPoints = data.fallPoints;
-					const springPoints = data.springPoints;
+					const attended = data.eventCodes;
+					var fallPoints = 0; 
+					var springPoints = 0;
+					codesDocSnap.forEach((code) => {
+						if(attended.includes(code.id))
+						{
+							var codeData = code.data();
+							if(codeData.semester === "fallPoints")
+							{
+								fallPoints += 1;
+							} else {
+								springPoints += 1; 
+							}
+						}
+					})
+					
+					
 					const totalPoints = fallPoints + springPoints;
 					var gbm = data.gbmPointsVE/8*100;
 					var programming = (data.programmingPointsVE + data.opaPointsVE)/12*100;

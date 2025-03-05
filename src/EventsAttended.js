@@ -18,116 +18,130 @@ function EventsAttended({email, cabinet})
         const fetchAttended = async () => {
             if(email === null) return;
 
+            // //Fetch user data
+            // const userDocRef = doc(db, "users", email);
+            // const userDocSnap = await getDoc(userDocRef);
+            
+            // //Fetch event code data
+            // const codesCollectionRef = collection(db, "codes");
+            // const codesDocSnap = await getDocs(codesCollectionRef);
             //Fetch user data
-            const userDocRef = doc(db, "users", email);
-            const userDocSnap = await getDoc(userDocRef);
+            const userDocRef = collection(db, "users");
+            const userDoc = await getDocs(userDocRef);
             
             //Fetch event code data
             const codesCollectionRef = collection(db, "codes");
             const codesDocSnap = await getDocs(codesCollectionRef);
-            
-            if(userDocSnap.exists())
+            var eligibleTotal = 0;
+            var fifty = 0;
+            var fourty = 0;
+            var thirty = 0;
+            var twenty = 0;
+            var ten = 0;
+            var zero = 0;
+            var people = "";
+            userDoc.forEach((userDocSnap) => 
             {
                 const data = userDocSnap.data();
-                const attended = data.eventCodes;
-                const gbm = [];
-                const programming = [];
-                const mlpFall = [];
-                const mlpSpring = [];
-                const opa = [];
-                const other = [];
-                const cabinet =[];
-                const missed = [];
-                const missedCodes = [];
-                const excused = [];
-                const excusedCodes = [];
-                const excusedEvents = data.excusedEvents;               
-                const excusedReasons = data.excusedReason || null;
-
+                var attended = data.eventCodes;
+                var gbm = 0;
+                var programming = 0;
+                var mlpFall = 0;
+                var mlpSpring = 0;
+                
                 codesDocSnap.forEach((doc) => {
-                    var added = false; 
                     attended.forEach(code => {
-                        if(code === doc.id)
+                        if(doc.data().voterEligible && code === doc.id)
                         {
-                            added = true;
                             const docData = doc.data();
                             if(docData.category === "GBM")
                             {
-                                gbm.push(doc);
-                            } else if(docData.category === "Programming") {
-                                programming.push(doc);
+                                gbm++;
+                            } else if(docData.category === "Programming" || docData.category === "OPA") {
+                                programming++;
                             } else if(docData.category === "MLP Fall") {
-                                mlpFall.push(doc);
+                                mlpFall++;
                             } else if(docData.category === "MLP Spring") {
-                                mlpSpring.push(doc);
-                            } else if(docData.category === "OPA") {
-                                opa.push(doc);
-                            } else if(docData.category === "Cabinet") {
-                                cabinet.push(doc);
-                            } else {
-                                other.push(doc);
-                            }
+                                mlpSpring++;
+                            } 
                             return;
                         }
                      })
-                     if(!added)
-                     {
-                        var missedData = doc.data();
-                        let missedDate = missedData.eventDate.replace('-0', '-');
-                        var today = new Date().toISOString().split('T')[0];
-                        today = today.replace('-0', '-');                    
-
-
-                        if(!excusedEvents.includes(doc.id) && missedData.cabinetRequired && (new Date(missedDate) < new Date(today))) 
-                        { 
-                            missed.push(doc);
-                            missedCodes.push(doc.id);
-                        } else if(excusedEvents.includes(doc.id) && missedData.cabinetRequired && (new Date(missedDate) < new Date(today))) {
-                            excused.push(doc);
-                            excusedCodes.push(doc.id);
-                        }
-                     }
                 })
-
-                //Update state
-                setGbm(gbm);
-                setProgramming(programming);
-                setMlpFall(mlpFall);
-                setMlpSpring(mlpSpring);
-                setOpa(opa);
-                setOther(other);
-                setCabinet(cabinet);
-                setMissed(missed);
-
-                updateDoc(userDocRef, {
-                    unexcusedEvents: missedCodes
-                });
-                if(cabinet.length !== 0 && excusedReasons !== null)
+                gbm = gbm/8*100;
+                programming = programming/12*100;
+                mlpFall = mlpFall/2*50;
+                mlpSpring = mlpSpring/2*50;
+                var total = gbm+programming+mlpFall+mlpSpring;
+                total = Math.round(total);
+                if(total >= 60)
                 {
-                    let tableData = "";
-                    console.log(cabinet);
-                    for(let i = 0; i < excusedEvents.length; i++)
-                    {
-                    
-                        //Find the event data 
-                        let currentEventId = excusedEvents[i];
-                        let excusedIndex = excusedCodes.indexOf(currentEventId);
-                        let currentExcusedDoc = excused[excusedIndex];
-                        if(excusedReasons[i] === undefined)
-                        {
-                            excusedReasons[i] = "N/A";
-                        }
-                        tableData += "<tr>";
-                        tableData += "<td>" + currentExcusedDoc.data().event + "</td>";
-                        tableData += "<td>" + currentExcusedDoc.data().eventDate + "</td>";
-                        tableData += "<td>" + currentExcusedDoc.data().category + "</td>";
-                        tableData += "<td>" + currentExcusedDoc.data().points + "</td>";
-                        tableData += "<td>" + excusedReasons[i] + "</td>";
-                        tableData += "</tr>";
-                    }
-                    document.getElementById("excusedTableData").innerHTML = tableData;
+                    people += userDocSnap.data().firstName + " " + userDocSnap.data().lastName +'\n' ;
+                    eligibleTotal++;
+                } else if (total >= 50) {
+
+                    fifty++;
+                } else if (total >= 40) {
+                    fourty++;
+                } else if (total >= 30) {
+                    thirty++;
+                } else if (total >= 20) {
+                    twenty++;
+                } else if (total >= 10) {
+                     
+                     ten++;
+                } else {
+                   
+                    zero++;
                 }
-             }
+                // //Update state
+                // setGbm(gbm);
+                // setProgramming(programming);
+                // setMlpFall(mlpFall);
+                // setMlpSpring(mlpSpring);
+                // setOpa(opa);
+                // setOther(other);
+                // setCabinet(cabinet);
+                // setMissed(missed);
+
+                // updateDoc(userDocRef, {
+                //     unexcusedEvents: missedCodes
+                // });
+                // if(cabinet.length !== 0 && excusedReasons !== null)
+                // {
+                //     let tableData = "";
+                //     console.log(cabinet);
+                //     for(let i = 0; i < excusedEvents.length; i++)
+                //     {
+                    
+                //         //Find the event data 
+                //         let currentEventId = excusedEvents[i];
+                //         let excusedIndex = excusedCodes.indexOf(currentEventId);
+                //         let currentExcusedDoc = excused[excusedIndex];
+                //         if(excusedReasons[i] === undefined)
+                //         {
+                //             excusedReasons[i] = "N/A";
+                //         }
+                //         tableData += "<tr>";
+                //         tableData += "<td>" + currentExcusedDoc.data().event + "</td>";
+                //         tableData += "<td>" + currentExcusedDoc.data().eventDate + "</td>";
+                //         tableData += "<td>" + currentExcusedDoc.data().category + "</td>";
+                //         tableData += "<td>" + currentExcusedDoc.data().points + "</td>";
+                //         tableData += "<td>" + excusedReasons[i] + "</td>";
+                //         tableData += "</tr>";
+                //     }
+                //     document.getElementById("excusedTableData").innerHTML = tableData;
+                // }
+             })
+             console.log(people);
+             console.log("eligible: " + eligibleTotal);
+             console.log("fifty: " + fifty);
+             console.log("fourty: " + fourty);
+             console.log("thirty: " + thirty);
+             console.log("twenty: " + twenty);
+             console.log("ten: " + ten);
+             console.log("zero: " + zero);
+
         };
         fetchAttended();
     }, [email, cabinet]);
